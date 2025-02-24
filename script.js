@@ -22,7 +22,10 @@ const renderCountry = function (data, className = '') {
         </article>`;
 
   countriesContainer.insertAdjacentHTML('beforeend', html);
-  countriesContainer.style.opacity = 1;
+};
+
+const renderError = function (err) {
+  countriesContainer.insertAdjacentText('beforeend', err);
 };
 
 // Old way of API request
@@ -63,23 +66,37 @@ const renderCountry = function (data, className = '') {
 
 //new way of making ajax calls
 
+const getJSON = function (url, error = 'Something went wrong!') {
+  fetch(url).then(function (response) {
+    if (!response.ok) throw new Error(`${error} (${response.status})`);
+    return response.json();
+  });
+};
+
 const getCountryData = function (country) {
-  fetch(`https://restcountries.com/v3.1/name/${country}`)
-    .then(function (response) {
-      return response.json();
-      //makes data readable
-    })
+  getJSON(`https://restcountries.com/v3.1/name/${country}`, 'Country not found')
     .then(function (data) {
       renderCountry(data[0]);
-      console.log(data[0]);
       const neighbour = data[0].borders[0];
-      console.log(neighbour);
 
-      if (!neighbour) console.log('No neighbours');
-      if (neighbour) console.log('yes');
-      return fetch(`https://restcountries.com/v3.1/alpha/AUT`);
+      if (!neighbour) throw new Error('No neighbour found!');
+      return getJSON(
+        `https://restcountries.com/v3.1/alpha/${neighbour}`,
+        'Country not found'
+      );
     })
-    .then(response => response.json())
-    .then(data => renderCountry(data, 'neighbour'));
+
+    .then(data => renderCountry(data[0], 'neighbour'))
+    .catch(err => {
+      renderError(`Something went wrong! ${err.message}. Try again!`);
+    })
+    .finally(() => {
+      countriesContainer.style.opacity = 1;
+    });
 };
-getCountryData('germany');
+
+btn.addEventListener('click', function () {
+  getCountryData('india');
+});
+
+getCountryData('irrnoeb');
