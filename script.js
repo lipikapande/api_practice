@@ -99,10 +99,68 @@ const renderCountry = function (data, className = '') {
 //   getCountryData('india');
 // });
 
-const whereAmI = function (lat, lng) {
-  fetch(
-    `https://us1.locationiq.com/v1/reverse?key=pk.c8ea39a3f13d62114a3a71a8b1ff13bb&lat=${lat}&lon=${lng}&format=json&`
-  )
+//CHALLENGE 1 - REVERSE GEOCODING
+
+// const whereAmI = function (lat, lng) {
+//   fetch(
+//     `https://us1.locationiq.com/v1/reverse?key=pk.c8ea39a3f13d62114a3a71a8b1ff13bb&lat=${lat}&lon=${lng}&format=json&`
+//   )
+//     .then(function (response) {
+//       return response.json();
+//     })
+//     .then(function (data) {
+//       console.log(data);
+//       console.log(`You are in ${data.address.city} ${data.address.country}`);
+//       return fetch(
+//         `https://restcountries.com/v3.1/alpha/${data.address.country_code}`
+//       );
+//     })
+//     .then(function (response) {
+//       return response.json();
+//     })
+//     .then(function (data) {
+//       renderCountry(data[0]);
+//     })
+//     .catch(err => {
+//       console.log(`${err.message}`);
+//     })
+//     .finally(() => {
+//       countriesContainer.style.opacity = 1;
+//     });
+// };
+
+// whereAmI(20, 56);
+
+// //CREATING NEW PROMISE
+
+// const lotteryPromise = new Promise(function (resolve, reject) {
+//   if (Math.random() >= 0.5) {
+//     resolve('You WIN '); //will mark this promise as fulfilled
+//   } else {
+//     reject('You lost your money ');
+//   }
+// });
+
+// lotteryPromise
+//   .then(function (response) {
+//     console.log(response);
+//   })
+//   .catch(err => console.log(err));
+
+const getPosition = function () {
+  return new Promise(function (resolve, reject) {
+    navigator.geolocation.getCurrentPosition(resolve, reject);
+  });
+};
+
+const whereAmI = function () {
+  getPosition()
+    .then(function (pos) {
+      const { latitude: lat, longitude: lng } = pos.coords;
+      return fetch(
+        `https://us1.locationiq.com/v1/reverse?key=pk.c8ea39a3f13d62114a3a71a8b1ff13bb&lat=${lat}&lon=${lng}&format=json&`
+      );
+    })
     .then(function (response) {
       return response.json();
     })
@@ -127,4 +185,47 @@ const whereAmI = function (lat, lng) {
     });
 };
 
-whereAmI(20, 56);
+btn.addEventListener('click', whereAmI);
+const imgContainer = document.querySelector('.images');
+
+const wait = function (seconds) {
+  return new Promise(function (resolve) {
+    setTimeout(resolve, seconds * 1000);
+  });
+};
+let currentImg;
+
+const createImage = function (imgPath) {
+  return new Promise(function (resolve, reject) {
+    const img = document.createElement('img');
+    img.src = imgPath;
+    img.addEventListener('load', function () {
+      imgContainer.append(img);
+      resolve(img);
+    });
+    img.addEventListener('error', function () {
+      reject(new Error('Image not found'));
+    });
+  });
+};
+
+createImage('img/img-1.jpg')
+  .then(function (img) {
+    currentImg = img;
+    console.log('image 1');
+    return wait(2);
+  })
+  .then(() => {
+    currentImg.style.display = 'none';
+    return wait(2);
+  })
+  .then(() => createImage('img/img-2.jpg'))
+  .then(function (img) {
+    currentImg = img;
+    console.log('image 2');
+    return wait(2);
+  })
+  .then(() => {
+    currentImg.style.display = 'none';
+  })
+  .catch(err => console.error(err));
