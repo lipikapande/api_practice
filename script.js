@@ -1,4 +1,4 @@
-'use strict';
+// 'use strict';
 
 const btn = document.querySelector('.btn-country');
 const countriesContainer = document.querySelector('.countries');
@@ -24,79 +24,107 @@ const renderCountry = function (data, className = '') {
   countriesContainer.insertAdjacentHTML('beforeend', html);
 };
 
-const renderError = function (err) {
-  countriesContainer.insertAdjacentText('beforeend', err);
-};
+// const renderError = function (err) {
+//   countriesContainer.insertAdjacentText('beforeend', err);
+// };
 
-// Old way of API request
-// const getCountryAndNeighbour = function (country) {
-//   //ajax call country 1
-//   const request = new XMLHttpRequest();
-//   request.open('GET', `https://restcountries.com/v3.1/name/${country}`);
-//   request.send();
-//   request.addEventListener('load', function () {
-//     const [data] = JSON.parse(this.responseText);
-//     console.log(data);
+// // Old way of API request
+// // const getCountryAndNeighbour = function (country) {
+// //   //ajax call country 1
+// //   const request = new XMLHttpRequest();
+// //   request.open('GET', `https://restcountries.com/v3.1/name/${country}`);
+// //   request.send();
+// //   request.addEventListener('load', function () {
+// //     const [data] = JSON.parse(this.responseText);
+// //     console.log(data);
 
-//     //render country 1
-//     renderCountry(data);
+// //     //render country 1
+// //     renderCountry(data);
 
-//     //get neighbour country(2)
-//     const neighbour = data.borders?.[0];
+// //     //get neighbour country(2)
+// //     const neighbour = data.borders?.[0];
 
-//     if (!neighbour) return;
+// //     if (!neighbour) return;
 
-//     const request2 = new XMLHttpRequest();
-//     request2.open(
-//       'GET',
-//       `https://restcountries.com/v3.1/alpha/${neighbour}
-// `
-//     );
-//     request2.send();
-//     request2.addEventListener('load', function () {
-//       const [data2] = JSON.parse(this.responseText);
-//       renderCountry(data2, 'neighbour');
-//     });
+// //     const request2 = new XMLHttpRequest();
+// //     request2.open(
+// //       'GET',
+// //       `https://restcountries.com/v3.1/alpha/${neighbour}
+// // `
+// //     );
+// //     request2.send();
+// //     request2.addEventListener('load', function () {
+// //       const [data2] = JSON.parse(this.responseText);
+// //       renderCountry(data2, 'neighbour');
+// //     });
+// //   });
+// // };
+
+// // getCountryAndNeighbour('india');
+// //js moves along the code after request for info.
+// // whatever arrives first, sets off the load event.
+
+// //new way of making ajax calls
+
+// const getJSON = function (url, error = 'Something went wrong!') {
+//   fetch(url).then(function (response) {
+//     if (!response.ok) throw new Error(`${error} (${response.status})`);
+//     return response.json();
 //   });
 // };
 
-// getCountryAndNeighbour('india');
-//js moves along the code after request for info.
-// whatever arrives first, sets off the load event.
+// const getCountryData = function (country) {
+//   getJSON(`https://restcountries.com/v3.1/name/${country}`, 'Country not found')
+//     .then(function (data) {
+//       renderCountry(data[0]);
+//       const neighbour = data[0].borders[0];
 
-//new way of making ajax calls
+//       if (!neighbour) throw new Error('No neighbour found!');
+//       return getJSON(
+//         `https://restcountries.com/v3.1/alpha/${neighbour}`,
+//         'Country not found'
+//       );
+//     })
 
-const getJSON = function (url, error = 'Something went wrong!') {
-  fetch(url).then(function (response) {
-    if (!response.ok) throw new Error(`${error} (${response.status})`);
-    return response.json();
-  });
-};
+//     .then(data => renderCountry(data[0], 'neighbour'))
+//     .catch(err => {
+//       renderError(`Something went wrong! ${err.message}. Try again!`);
+//     })
+//     .finally(() => {
+//       countriesContainer.style.opacity = 1;
+//     });
+// };
 
-const getCountryData = function (country) {
-  getJSON(`https://restcountries.com/v3.1/name/${country}`, 'Country not found')
+// btn.addEventListener('click', function () {
+//   getCountryData('india');
+// });
+
+const whereAmI = function (lat, lng) {
+  fetch(
+    `https://us1.locationiq.com/v1/reverse?key=pk.c8ea39a3f13d62114a3a71a8b1ff13bb&lat=${lat}&lon=${lng}&format=json&`
+  )
+    .then(function (response) {
+      return response.json();
+    })
     .then(function (data) {
-      renderCountry(data[0]);
-      const neighbour = data[0].borders[0];
-
-      if (!neighbour) throw new Error('No neighbour found!');
-      return getJSON(
-        `https://restcountries.com/v3.1/alpha/${neighbour}`,
-        'Country not found'
+      console.log(data);
+      console.log(`You are in ${data.address.city} ${data.address.country}`);
+      return fetch(
+        `https://restcountries.com/v3.1/alpha/${data.address.country_code}`
       );
     })
-
-    .then(data => renderCountry(data[0], 'neighbour'))
+    .then(function (response) {
+      return response.json();
+    })
+    .then(function (data) {
+      renderCountry(data[0]);
+    })
     .catch(err => {
-      renderError(`Something went wrong! ${err.message}. Try again!`);
+      console.log(`${err.message}`);
     })
     .finally(() => {
       countriesContainer.style.opacity = 1;
     });
 };
 
-btn.addEventListener('click', function () {
-  getCountryData('india');
-});
-
-getCountryData('irrnoeb');
+whereAmI(20, 56);
